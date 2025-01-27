@@ -19,7 +19,7 @@ services:
 
   gotenberg:
     container_name: Paperless-NGX-gotenberg
-    image: docker.io/gotenberg/gotenberg:8
+    image: docker.io/gotenberg/gotenberg:8.7
     restart: unless-stopped
   
   tika:
