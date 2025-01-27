@@ -1,0 +1,58 @@
+services:
+  broker:
+    image: redis
+    container_name: Paperless-NGX-REDIS
+    restart: always
+    volumes:
+      - /volume1/docker/paperlessngx/redis:/data
+
+  db:
+    image: postgres:16
+    container_name: Paperless-NGX-DB
+    restart: always
+    volumes:
+      - /volume1/docker/paperlessngx/db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: paperless
+      POSTGRES_USER: paperless
+      POSTGRES_PASSWORD: paperless
+
+  gotenberg:
+    container_name: Paperless-NGX-gotenberg
+    image: docker.io/gotenberg/gotenberg:8
+    restart: unless-stopped
+  
+  tika:
+    container_name: Paperless-NGX-tika
+    image: docker.io/apache/tika:latest
+    restart: unless-stopped
+
+  webserver:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    container_name: Paperless-NGX
+    restart: always
+    depends_on:
+      - db
+      - broker
+      - gotenberg
+      - tika
+    ports:
+      - 8777:8000
+    volumes:
+      - /volume1/docker/paperlessngx/data:/usr/src/paperless/data
+      - /volume1/docker/paperlessngx/media:/usr/src/paperless/media
+      - /volume1/docker/paperlessngx/export:/usr/src/paperless/export
+      - /volume1/docker/paperlessngx/consume:/usr/src/paperless/consume
+    environment:
+      PAPERLESS_REDIS: redis://broker:6379
+      PAPERLESS_DBHOST: db
+      USERMAP_UID: 1026
+      USERMAP_GID: 100
+      PAPERLESS_TIME_ZONE: Europe/Berlin
+      PAPERLESS_ADMIN_USER: 5wd
+      PAPERLESS_ADMIN_PASSWORD: ch4ng3m3 
+      PAPERLESS_OCR_LANGUAGE: deu+eng
+      PAPERLESS_TIKA_ENABLED: 1
+      PAPERLESS_TIKA_GOTENBERG_ENDPOINT: http://gotenberg:3000
+      PAPERLESS_TIKA_ENDPOINT: http://tika:9998
+      PAPERLESS_URL: https://paperlessngx.your.proxy
